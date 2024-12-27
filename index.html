@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSE with Go and HTMX</title>
+  <script src="https://unpkg.com/htmx.org"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 2rem;
+      background-color: #f3f4f6;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2d3748;
+    }
+
+    p {
+      text-align: center;
+      font-size: 1.1rem;
+      color: #4a5568;
+    }
+
+    #events {
+      margin-top: 2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .event-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 1rem;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .event-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .event-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #2d3748;
+      margin-bottom: 0.5rem;
+    }
+
+    .event-description {
+      font-size: 1rem;
+      color: #4a5568;
+      margin-bottom: 1rem;
+    }
+
+    .event-footer {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      color: #718096;
+    }
+
+    .event-id {
+      font-weight: bold;
+      color: #3182ce;
+    }
+  </style>
+</head>
+<body>
+  <h1>Real-Time Updates with SSE</h1>
+  <p>New events will automatically appear below:</p>
+
+  <div id="events">
+    <!-- Real-time event cards will be inserted here -->
+  </div>
+
+  <script>
+    const eventSource = new EventSource('/events');
+
+    eventSource.onmessage = (event) => {
+      const eventsDiv = document.getElementById('events');
+      const payload = JSON.parse(event.data); // Parse the payload from the server
+
+      // Create a new event card
+      const eventCard = document.createElement('div');
+      eventCard.className = 'event-card';
+
+      // Event Title
+      const eventTitle = document.createElement('div');
+      eventTitle.className = 'event-title';
+      eventTitle.textContent = payload.title;
+
+      // Event Description
+      const eventDescription = document.createElement('div');
+      eventDescription.className = 'event-description';
+      eventDescription.textContent = payload.body;
+
+      // Event Footer
+      const eventFooter = document.createElement('div');
+      eventFooter.className = 'event-footer';
+
+      const eventId = document.createElement('div');
+      eventId.className = 'event-id';
+      eventId.textContent = `ID: ${payload.id}`;
+
+      const eventTimestamp = document.createElement('div');
+      eventTimestamp.textContent = new Date(payload.timestamp).toLocaleString();
+
+      eventFooter.appendChild(eventId);
+      eventFooter.appendChild(eventTimestamp);
+
+      // Append all parts to the card
+      eventCard.appendChild(eventTitle);
+      eventCard.appendChild(eventDescription);
+      eventCard.appendChild(eventFooter);
+
+      // Append the card to the events container
+      eventsDiv.appendChild(eventCard);
+    };
+
+    eventSource.onerror = (error) => {
+      console.error('Error with SSE:', error);
+    };
+  </script>
+</body>
+</html>
